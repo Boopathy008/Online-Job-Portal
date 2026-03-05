@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobHub - Recruiter Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* Profile Modal Styles */
+        .seeker-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .seeker-modal-pic {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary);
+        }
+
+        .seeker-details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .detail-item label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .detail-item p {
+            font-weight: 500;
+        }
+
+        .skills-tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .skill-tag {
+            background: rgba(79, 70, 229, 0.1);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="toast-container"></div>
+    <nav class="navbar">
+        <div class="container nav-content">
+            <div class="logo">
+                <i class="fa-solid fa-briefcase"></i> JobHub <span
+                    style="font-size:0.8rem; color:var(--text-muted); font-weight:normal; margin-left:10px;">Recruiter
+                    Portal</span>
+            </div>
+            <div class="nav-links">
+                <span id="user-name" class="mr-3"></span>
+                <button class="btn btn-ghost" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>
+                    Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container dashboard-container">
+        <aside class="sidebar glass-card">
+            <h3 class="mb-3">Management</h3>
+            <div class="nav-item active" onclick="switchTab('manage-jobs')">
+                <i class="fa-solid fa-list"></i> My Postings
+            </div>
+            <div class="nav-item" onclick="switchTab('post-job')">
+                <i class="fa-solid fa-plus-circle"></i> Post New Job
+            </div>
+            <div class="nav-item" onclick="switchTab('settings')">
+                <i class="fa-solid fa-cog"></i> Settings
+            </div>
+        </aside>
+
+        <main>
+            <!-- Manage Jobs -->
+            <div id="manage-jobs" class="tab-content active glass-card">
+                <h2>My Job Postings</h2>
+                <div id="recruiter-jobs-list" class="jobs-list mt-3">
+                    <!-- Jobs will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Post Job Tab -->
+            <div id="post-job" class="tab-content glass-card">
+                <h2>Post a New Job</h2>
+                <form class="mt-3" onsubmit="handlePostJob(event)">
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label>Job Title</label>
+                            <input type="text" id="job-title" class="styled-select" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Location</label>
+                            <input type="text" id="job-location" class="styled-select" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Salary (Numeric)</label>
+                            <input type="number" id="job-salary" class="styled-select">
+                        </div>
+                        <div class="input-group full-width">
+                            <label>Description</label>
+                            <textarea id="job-desc" class="styled-textarea" rows="5" required></textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3"><i class="fa-solid fa-paper-plane"></i> Post
+                        Job</button>
+                </form>
+            </div>
+
+            <!-- Applicants View -->
+            <div id="view-applicants" class="tab-content glass-card">
+                <div style="display: flex; justify-content: space-between; align-items:center;">
+                    <h2>Applicants for: <span id="app-job-title" style="color:var(--primary)"></span></h2>
+                    <button class="btn btn-ghost" onclick="switchTab('manage-jobs')"><i
+                            class="fa-solid fa-arrow-left"></i> Back</button>
+                </div>
+                <div id="applicants-list" class="jobs-list mt-3">
+                    <!-- Applicants loaded here -->
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings" class="tab-content glass-card">
+                <h2>Account Settings</h2>
+                <div class="mt-4" style="border-top: 1px solid var(--glass-border); padding-top: 2rem;">
+                    <button class="btn btn-danger" onclick="handleAccountDeletion()"><i
+                            class="fa-solid fa-user-xmark"></i> Delete Account</button>
+                    <p class="text-muted mt-2" style="font-size: 0.8rem;">Warning: This action is permanent and will
+                        delete all your jobs and data.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Seeker Profile Modal -->
+    <div class="modal-overlay" id="seeker-modal">
+        <div class="modal-container glass-card" style="max-width: 600px;">
+            <span class="close-btn" onclick="closeSeekerModal()"><i class="fa-solid fa-times"></i></span>
+            <div class="seeker-modal-header">
+                <img id="modal-seeker-pic" src="https://via.placeholder.com/80" alt="Profile" class="seeker-modal-pic">
+                <div>
+                    <h2 id="modal-seeker-name">Applicant Name</h2>
+                    <p id="modal-seeker-email" class="text-muted"></p>
+                </div>
+            </div>
+
+            <div class="seeker-details-grid">
+                <div class="detail-item">
+                    <label>Phone</label>
+                    <p id="modal-seeker-phone">N/A</p>
+                </div>
+                <div class="detail-item">
+                    <label>Location</label>
+                    <p id="modal-seeker-location">N/A</p>
+                </div>
+                <div class="detail-item">
+                    <label>Experience</label>
+                    <p id="modal-seeker-exp">N/A</p>
+                </div>
+                <div class="detail-item">
+                    <label>LinkedIn</label>
+                    <p id="modal-seeker-linkedin">N/A</p>
+                </div>
+                <div class="detail-item">
+                    <label>GitHub</label>
+                    <p id="modal-seeker-github">N/A</p>
+                </div>
+                <div class="detail-item">
+                    <label>Age</label>
+                    <p id="modal-seeker-age">N/A</p>
+                </div>
+                <div class="detail-item">
+                    <label>Gender</label>
+                    <p id="modal-seeker-gender">N/A</p>
+                </div>
+                <div class="detail-item">
+                    <label>Skills</label>
+                    <div id="modal-seeker-skills" class="skills-tag-container"></div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2.5rem;">
+                <button class="btn btn-secondary btn-full" id="modal-view-resume-btn">View Resume</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const role = localStorage.getItem('role');
+            if (role !== 'ROLE_RECRUITER') {
+                window.location.href = 'index.html';
+                return;
+            }
+            document.getElementById('user-name').innerText = localStorage.getItem('name');
+            checkVerificationStatus();
+            loadMyJobs();
+        });
+
+        async function checkVerificationStatus() {
+            try {
+                // We can get the status from a temporary profile call or just use the one from recruiter jobs
+                // For simplicity, let's assume we want to show a warning if they are not approved.
+                // We'll add a small banner if they are pending.
+                const profile = await api.recruiter.getProfile(); // This returns the User object for authenticated recruiter
+                if (profile.verificationStatus === 'APPROVED') {
+                    const main = document.querySelector('main');
+                    const banner = document.createElement('div');
+                    banner.className = 'glass-card';
+                    banner.style.borderLeft = '4px solid var(--success)';
+                    banner.style.marginBottom = '1.5rem';
+                    banner.style.padding = '1rem';
+                    banner.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            <i class="fa-solid fa-check-circle" style="color:var(--success); font-size:1.5rem;"></i>
+                            <div>
+                                <h4 style="margin:0; color:var(--success);">Verification Successful</h4>
+                                <p style="margin:5px 0 0; font-size:0.9rem;">${profile.statusMessage || 'Your account is fully verified. You can now post and manage jobs.'}</p>
+                            </div>
+                        </div>
+                    `;
+                    main.prepend(banner);
+                } else if (profile.verificationStatus === 'PENDING') {
+                    const main = document.querySelector('main');
+                    const banner = document.createElement('div');
+                    banner.className = 'glass-card';
+                    banner.style.borderLeft = '4px solid var(--warning)';
+                    banner.style.marginBottom = '1.5rem';
+                    banner.style.padding = '1rem';
+                    banner.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            <i class="fa-solid fa-clock-rotate-left" style="color:var(--warning); font-size:1.5rem;"></i>
+                            <div>
+                                <h4 style="margin:0; color:var(--warning);">Verification Pending</h4>
+                                <p style="margin:5px 0 0; font-size:0.9rem;">${profile.statusMessage || 'Your recruiter account is currently being reviewed by our team. You can post jobs, but they will remain PENDING and visible only to you until your account is fully verified.'}</p>
+                            </div>
+                        </div>
+                    `;
+                    main.prepend(banner);
+                } else if (profile.verificationStatus === 'REJECTED') {
+                    const main = document.querySelector('main');
+                    const banner = document.createElement('div');
+                    banner.className = 'glass-card';
+                    banner.style.borderLeft = '4px solid var(--danger)';
+                    banner.style.marginBottom = '1.5rem';
+                    banner.style.padding = '1rem';
+                    banner.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            <i class="fa-solid fa-circle-xmark" style="color:var(--danger); font-size:1.5rem;"></i>
+                            <div>
+                                <h4 style="margin:0; color:var(--danger);">Verification Failed</h4>
+                                <p style="margin:5px 0 0; font-size:0.9rem;">${profile.statusMessage || 'Your account verification was rejected. Please contact support for more information.'}</p>
+                            </div>
+                        </div>
+                    `;
+                    main.prepend(banner);
+                }
+            } catch (e) {
+                console.error('Failed to check verification status', e);
+            }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.sidebar .nav-item').forEach(el => el.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+
+            // Mark nav item active if clicked from sidebar
+            if (event && event.currentTarget && event.currentTarget.classList.contains('nav-item')) {
+                event.currentTarget.classList.add('active');
+            }
+
+            if (tabId === 'manage-jobs') loadMyJobs();
+        }
+
+        async function loadMyJobs() {
+            const list = document.getElementById('recruiter-jobs-list');
+            list.innerHTML = '<p>Loading...</p>';
+            try {
+                const jobs = await api.recruiter.getJobs();
+                if (jobs.length === 0) {
+                    list.innerHTML = '<p>You haven\'t posted any jobs yet.</p>';
+                    return;
+                }
+                list.innerHTML = jobs.map(job => `
+                    <div class="glass-card job-item">
+                        <div>
+                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;">
+                                <h3 style="margin:0;">${job.title}</h3>
+                                <span class="tag" style="background:${job.status === 'APPROVED' ? 'rgba(16, 185, 129, 0.2)' : (job.status === 'REJECTED' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)')}; color:${job.status === 'APPROVED' ? '#10B981' : (job.status === 'REJECTED' ? '#EF4444' : '#F59E0B')}; border:1px solid currentColor; font-size:0.7rem; padding:2px 6px;">${job.status || 'PENDING'}</span>
+                            </div>
+                            <p class="text-muted"><i class="fa-solid fa-location-dot"></i> ${job.location} | <i class="fa-solid fa-money-bill"></i> $${job.salary}</p>
+                        </div>
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn btn-secondary" onclick="viewApplicants(${job.id}, '${job.title}')">View Applicants</button>
+                            <button class="btn btn-danger" onclick="deleteJob(${job.id})"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                list.innerHTML = `<p class="text-danger">Error: ${e.message}</p>`;
+            }
+        }
+
+        async function handlePostJob(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Posting...';
+            btn.disabled = true;
+
+            const jobData = {
+                title: document.getElementById('job-title').value,
+                location: document.getElementById('job-location').value,
+                salary: document.getElementById('job-salary').value,
+                description: document.getElementById('job-desc').value
+            };
+
+            try {
+                await api.recruiter.postJob(jobData);
+                showToast('Job posted successfully!', 'success');
+                e.target.reset();
+                switchTab('manage-jobs');
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function deleteJob(id) {
+            if (!confirm("Are you sure you want to delete this job posting?")) return;
+            try {
+                await api.recruiter.deleteJob(id);
+                showToast('Job deleted', 'success');
+                loadMyJobs();
+            } catch (e) {
+                showToast(e.message, 'error');
+            }
+        }
+
+        async function viewApplicants(jobId, jobTitle) {
+            document.getElementById('app-job-title').innerText = jobTitle;
+            switchTab('view-applicants');
+
+            const list = document.getElementById('applicants-list');
+            list.innerHTML = '<p>Loading applicants...</p>';
+
+            try {
+                const apps = await api.recruiter.getApplicants(jobId);
+                if (apps.length === 0) {
+                    list.innerHTML = '<p>No applicants yet.</p>';
+                    return;
+                }
+
+                list.innerHTML = apps.map(app => `
+                    <div class="glass-card" style="margin-bottom:1rem; border-left: 4px solid var(--primary);">
+                        <div style="display:flex; justify-content: space-between; align-items:center;">
+                            <div style="display:flex; align-items:center; gap:15px;">
+                                <div style="font-size:1.5rem; color:var(--primary)"><i class="fa-solid fa-user-circle"></i></div>
+                                <div>
+                                    <h4 style="margin:0;">${app.jobSeeker.name}</h4>
+                                    <p class="text-muted" style="font-size:0.8rem;">Status: ${app.status}</p>
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:8px;">
+                                <button onclick='showSeekerProfile(${JSON.stringify(app.jobSeeker).replace(/'/g, "&apos;")})' class="btn btn-ghost" style="font-size:0.8rem; padding: 5px 10px;">
+                                    View Profile
+                                </button>
+                                <button onclick="handleViewResume(${app.jobSeeker.id})" class="btn btn-secondary" style="font-size:0.8rem; padding: 5px 10px;">
+                                    Resume
+                                </button>
+                                <button onclick="updateStatus(${app.id}, 'SHORTLISTED')" class="btn btn-success" style="font-size:0.8rem; padding: 5px 10px;">
+                                    Shortlist
+                                </button>
+                                <button onclick="updateStatus(${app.id}, 'REJECTED')" class="btn btn-danger" style="font-size:0.8rem; padding: 5px 10px;">
+                                    Reject
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                list.innerHTML = `<p class="text-danger">Error: ${e.message}</p>`;
+            }
+        }
+
+        async function updateStatus(appId, status) {
+            try {
+                await api.recruiter.updateApplication(appId, status);
+                showToast(`Applicant ${status.toLowerCase()}!`, 'success');
+                showToast('Refresh the view to see updated status.', 'info');
+            } catch (e) {
+                showToast(e.message, 'error');
+            }
+        }
+
+        async function handleViewResume(seekerId) {
+            try {
+                showToast('Loading resume...', 'info');
+                const url = await api.recruiter.downloadResume(seekerId);
+                window.open(url, '_blank');
+            } catch (e) {
+                showToast('Error loading resume. It might not be uploaded yet.', 'error');
+            }
+        }
+
+        async function showSeekerProfile(seeker) {
+            document.getElementById('modal-seeker-name').innerText = seeker.name;
+            document.getElementById('modal-seeker-email').innerText = seeker.email;
+            document.getElementById('modal-seeker-phone').innerText = seeker.phoneNumber || 'N/A';
+            document.getElementById('modal-seeker-location').innerText = seeker.location || 'N/A';
+            document.getElementById('modal-seeker-exp').innerText = seeker.experienceLevel || 'N/A';
+
+            const linkedin = document.getElementById('modal-seeker-linkedin');
+            linkedin.innerHTML = seeker.linkedinUrl ? `<a href="${seeker.linkedinUrl}" target="_blank">View LinkedIn</a>` : 'N/A';
+
+            const github = document.getElementById('modal-seeker-github');
+            github.innerHTML = seeker.githubUrl ? `<a href="${seeker.githubUrl}" target="_blank">View GitHub</a>` : 'N/A';
+
+            document.getElementById('modal-seeker-age').innerText = seeker.age || 'N/A';
+            document.getElementById('modal-seeker-gender').innerText = seeker.gender || 'N/A';
+
+            const skillsContainer = document.getElementById('modal-seeker-skills');
+            skillsContainer.innerHTML = '';
+            if (seeker.skills) {
+                seeker.skills.split(',').forEach(skill => {
+                    const tag = document.createElement('span');
+                    tag.className = 'skill-tag';
+                    tag.innerText = skill.trim();
+                    skillsContainer.appendChild(tag);
+                });
+            } else {
+                skillsContainer.innerHTML = '<p class="text-muted">No skills listed</p>';
+            }
+
+            // Profile Picture
+            const img = document.getElementById('modal-seeker-pic');
+            img.src = 'https://via.placeholder.com/80'; // Reset
+            if (seeker.profilePicturePath) {
+                try {
+                    const url = await api.recruiter.getSeekerProfilePictureURL(seeker.id);
+                    img.src = url;
+                } catch (e) { console.error('Error loading pic', e); }
+            }
+
+            document.getElementById('modal-view-resume-btn').onclick = () => handleViewResume(seeker.id);
+            document.getElementById('seeker-modal').classList.add('active');
+        }
+
+        function closeSeekerModal() {
+            document.getElementById('seeker-modal').classList.remove('active');
+        }
+        async function handleAccountDeletion() {
+            if (!confirm("Are you absolutely sure you want to delete your recruiter account? This will permanently remove all your posted jobs and associated applications.")) return;
+
+            try {
+                await api.recruiter.deleteAccount();
+                showToast("Account deleted successfully.", "success");
+                setTimeout(() => logout(), 2000);
+            } catch (e) {
+                showToast(e.message, "error");
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,22 @@
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Project specific
+backend/apache-maven-3.9.6/
+uploads/
+/tmp/
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobHub - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        th {
+            background: rgba(0, 0, 0, 0.2);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="toast-container"></div>
+    <nav class="navbar" style="border-bottom-color: var(--danger);">
+        <div class="container nav-content">
+            <div class="logo" style="color:var(--danger)">
+                <i class="fa-solid fa-shield"></i> JobHub <span
+                    style="font-size:0.8rem; color:var(--text-muted); font-weight:normal; margin-left:10px;">Admin
+                    System</span>
+            </div>
+            <div class="nav-links">
+                <span id="user-name" class="mr-3"></span>
+                <button class="btn btn-ghost" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>
+                    Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container dashboard-container">
+        <aside class="sidebar glass-card" style="border-top: 4px solid var(--danger);">
+            <div class="nav-item active" onclick="switchTab('manage-users')">
+                <i class="fa-solid fa-users"></i> All Users
+            </div>
+            <div class="nav-item" onclick="switchTab('pending-recruiters')">
+                <i class="fa-solid fa-user-check"></i> Pending Recruiters
+            </div>
+            <div class="nav-item" onclick="switchTab('manage-all-jobs')">
+                <i class="fa-solid fa-list-check"></i> All Jobs
+            </div>
+        </aside>
+
+        <main>
+            <!-- Users Tab -->
+            <div id="manage-users" class="tab-content active glass-card">
+                <h2>User Management</h2>
+                <div style="overflow-x: auto;">
+                    <table id="users-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-list">
+                            <tr>
+                                <td colspan="5">Loading users...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pending Recruiters Tab -->
+            <div id="pending-recruiters" class="tab-content glass-card">
+                <h2>Pending Recruiter Verifications</h2>
+                <div style="overflow-x: auto;">
+                    <table id="pending-recruiters-table">
+                        <thead>
+                            <tr>
+                                <th>Name/Email</th>
+                                <th>Company Details</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pending-recruiters-list">
+                            <tr>
+                                <td colspan="3">Loading pending recruiters...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+            <!-- Jobs Tab -->
+            <div id="manage-all-jobs" class="tab-content glass-card">
+                <h2>Platform Jobs Oversight</h2>
+                <div style="overflow-x: auto;">
+                    <table id="jobs-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Title</th>
+                                <th>Company/Recruiter</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="all-jobs-list">
+                            <tr>
+                                <td colspan="4">Loading jobs...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const role = localStorage.getItem('role');
+            if (role !== 'ROLE_ADMIN') {
+                window.location.href = 'index.html';
+                return;
+            }
+            document.getElementById('user-name').innerText = localStorage.getItem('name');
+            loadUsers();
+        });
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.sidebar .nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+
+            if (tabId === 'manage-users') loadUsers();
+            if (tabId === 'pending-recruiters') loadPendingRecruiters();
+            if (tabId === 'manage-all-jobs') loadAllJobs();
+        }
+
+        async function loadPendingRecruiters() {
+            try {
+                const recruiters = await api.admin.getPendingRecruiters();
+                const tbody = document.getElementById('pending-recruiters-list');
+                if (recruiters.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:2rem;">No pending recruiter verifications.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = recruiters.map(r => `
+                    <tr>
+                        <td>
+                            <div style="font-weight:700;">${r.name}</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">${r.email}</div>
+                        </td>
+                        <td>
+                            <div style="font-weight:600; color:var(--primary);">${r.companyName}</div>
+                            <div style="font-size:0.8rem;">
+                                <a href="${r.companyWebsite}" target="_blank" style="color:var(--text-muted); text-decoration:underline;">${r.companyWebsite}</a><br>
+                                ID: ${r.companyRegistrationId} | ${r.companyEmail}
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display:flex; gap:10px;">
+                                <button class="btn btn-primary" style="padding:5px 10px; font-size:0.8rem;" onclick="verifyRecruiter(${r.id}, 'APPROVED')">Approve</button>
+                                <button class="btn btn-danger" style="padding:5px 10px; font-size:0.8rem;" onclick="verifyRecruiter(${r.id}, 'REJECTED')">Reject</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                showToast('Failed to load pending recruiters', 'error');
+            }
+        }
+
+        async function verifyRecruiter(id, status) {
+            const message = prompt(`Enter a message for the recruiter (optional):`, status === 'APPROVED' ? "Your account has been approved!" : "Your verification has been rejected.");
+            if (message === null) return; // Cancelled
+
+            try {
+                await api.admin.updateRecruiterStatus(id, status, message);
+                showToast(`Recruiter ${status.toLowerCase()} successfully`, 'success');
+                loadPendingRecruiters();
+            } catch (e) {
+                showToast(e.message, 'error');
+            }
+        }
+
+        async function loadPendingJobs() {
+            try {
+                const jobs = await api.admin.getPendingJobs();
+                const tbody = document.getElementById('pending-jobs-list');
+                if (jobs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:2rem;">No pending job approvals.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = jobs.map(j => `
+                    <tr>
+                        <td>
+                            <div style="font-weight:700;">${j.title}</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">${j.location} | $${j.salary}</div>
+                        </td>
+                        <td>
+                            <div style="font-weight:600;">${j.recruiter ? j.recruiter.companyName : 'Unknown'}</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">${j.recruiter ? j.recruiter.name : 'N/A'}</div>
+                        </td>
+                        <td>
+                            <div style="display:flex; gap:10px;">
+                                <button class="btn btn-primary" style="padding:5px 10px; font-size:0.8rem;" onclick="verifyJob(${j.id}, 'APPROVED')">Approve</button>
+                                <button class="btn btn-danger" style="padding:5px 10px; font-size:0.8rem;" onclick="verifyJob(${j.id}, 'REJECTED')">Reject</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                showToast('Failed to load pending jobs', 'error');
+            }
+        }
+
+        async function verifyJob(id, status) {
+            try {
+                await api.admin.updateJobStatus(id, status);
+                showToast(`Job ${status.toLowerCase()} successfully`, 'success');
+                loadPendingJobs();
+            } catch (e) {
+                showToast(e.message, 'error');
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const users = await api.admin.getUsers();
+                const tbody = document.getElementById('users-list');
+                tbody.innerHTML = users.map(u => {
+                    const statusClass = u.verificationStatus === 'APPROVED' ? 'tag-success' : (u.verificationStatus === 'REJECTED' ? 'tag-danger' : 'tag-warning');
+                    const isSelf = u.email === localStorage.getItem('email');
+                    return `
+                        <tr>
+                            <td>${u.id}</td>
+                            <td>${u.name}</td>
+                            <td>${u.email}</td>
+                            <td><span class="tag" style="background:${u.role === 'ROLE_ADMIN' ? 'var(--danger)' : 'var(--primary)'}; font-size:0.7rem; padding:3px 6px;">${u.role}</span></td>
+                            <td>
+                                <span class="tag ${statusClass}" style="font-size:0.7rem; padding:3px 6px;">${u.verificationStatus || 'N/A'}</span>
+                            </td>
+                            <td>
+                                ${!isSelf ? `<button class="btn btn-danger" style="padding: 5px 10px; font-size:0.8rem;" onclick="adminDeleteUser(${u.id})"><i class="fa-solid fa-trash"></i></button>` : '<span class="text-muted" style="font-size:0.7rem;">(You)</span>'}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (e) {
+                showToast('Failed to load users: ' + e.message, 'error');
+            }
+        }
+
+        async function adminDeleteUser(id) {
+            if (!confirm("Are you sure you want to PERMANENTLY delete this user? All their associated data (jobs, applications, resumes) will be removed.")) return;
+            try {
+                await api.admin.deleteUser(id);
+                showToast('User and all associated data deleted successfully', 'success');
+                loadUsers();
+            } catch (e) {
+                showToast(e.message, 'error');
+            }
+        }
+
+        async function changeRole(userId, newRole) {
+            try {
+                await api.admin.changeRole(userId, newRole);
+                showToast('Role updated successfully', 'success');
+                loadUsers();
+            } catch (e) {
+                showToast(e.message, 'error');
+            }
+        }
+
+        async function loadAllJobs() {
+            try {
+                const jobs = await api.admin.getJobs();
+                const tbody = document.getElementById('all-jobs-list');
+                tbody.innerHTML = jobs.map(j => `
+                    <tr>
+                        <td>${j.id}</td>
+                        <td>${j.title}</td>
+                        <td>${j.recruiter ? j.recruiter.name : 'Unknown'} ${j.recruiter && j.recruiter.companyName ? `(${j.recruiter.companyName})` : ''}</td>
+                        <td><button class="btn btn-danger" style="padding: 5px 10px; font-size:0.8rem;" onclick="adminDeleteJob(${j.id})"><i class="fa-solid fa-trash"></i> Delete</button></td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                showToast('Failed to load jobs', 'error');
+            }
+        }
+
+        async function adminDeleteJob(id) {
+            if (!confirm("Are you sure you want to enforce deletion of this job?")) return;
+            try {
+                await api.admin.deleteJob(id);
+                showToast('Job removed by admin', 'success');
+                loadAllJobs();
+            } catch (e) {
+                showToast(e.message, 'error');
+            }
+        }
+    </script>
+</body>
+
+</html>

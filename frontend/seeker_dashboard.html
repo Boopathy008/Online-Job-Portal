@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobHub - Seeker Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 1.5rem;
+        }
+
+        .stat-card h3 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .stat-card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .profile-pic-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+
+        .profile-pic {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primary);
+            background: var(--dark-bg);
+        }
+
+        .pic-upload-btn {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: var(--primary);
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px solid var(--dark-bg);
+        }
+
+        .profile-details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .profile-field {
+            margin-bottom: 1rem;
+        }
+
+        .profile-field label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .profile-field p {
+            font-weight: 500;
+        }
+
+        .resume-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.4s ease forwards;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="toast-container"></div>
+    <nav class="navbar">
+        <div class="container nav-content">
+            <div class="logo">
+                <i class="fa-solid fa-briefcase"></i> JobHub
+            </div>
+            <div class="nav-links">
+                <span id="user-name" class="mr-3"></span>
+                <button class="btn btn-ghost border-danger" onclick="logout()"><i
+                        class="fa-solid fa-right-from-bracket"></i> Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container dashboard-container">
+        <aside class="sidebar glass-card">
+            <h3 class="mb-3">Dashboard</h3>
+            <div class="nav-item active" onclick="switchTab('jobs-tab')">
+                <i class="fa-solid fa-search"></i> Find Jobs
+            </div>
+            <div class="nav-item" onclick="switchTab('apps-tab')">
+                <i class="fa-solid fa-file-lines"></i> My Applications
+            </div>
+            <div class="nav-item" onclick="switchTab('profile-tab')">
+                <i class="fa-solid fa-user"></i> Profile
+            </div>
+        </aside>
+
+        <main>
+            <!-- Find Jobs Tab -->
+            <div id="jobs-tab" class="tab-content active glass-card">
+                <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+                    <div class="input-icon" style="flex: 1;">
+                        <i class="fa-solid fa-search"></i>
+                        <input type="text" id="search-input" placeholder="Job title or location...">
+                    </div>
+                    <button class="btn btn-primary" onclick="loadJobs()">Search</button>
+                </div>
+                <h2>Available Jobs</h2>
+                <div id="jobs-list" class="jobs-list mt-3">
+                    <!-- Jobs will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Applications Tab -->
+            <div id="apps-tab" class="tab-content glass-card">
+                <h2>My Applications</h2>
+                <div id="apps-list" class="jobs-list mt-3">
+                    <!-- Apps will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Profile Tab -->
+            <div id="profile-tab" class="tab-content glass-card">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+                    <h2>My Profile</h2>
+                    <button class="btn btn-primary" onclick="openEditModal()"><i class="fa-solid fa-pen"></i> Edit
+                        Profile</button>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="glass-card stat-card">
+                        <h3 id="stat-applied">0</h3>
+                        <p>Applied</p>
+                    </div>
+                    <div class="glass-card stat-card">
+                        <h3 id="stat-shortlisted">0</h3>
+                        <p>Shortlisted</p>
+                    </div>
+                    <div class="glass-card stat-card">
+                        <h3 id="stat-rejected">0</h3>
+                        <p>Rejected</p>
+                    </div>
+                </div>
+
+                <div class="profile-header">
+                    <div class="profile-pic-container">
+                        <img id="profile-img" src="https://via.placeholder.com/120" alt="Profile" class="profile-pic">
+                        <label for="pic-input" class="pic-upload-btn">
+                            <i class="fa-solid fa-camera"></i>
+                            <input type="file" id="pic-input" accept="image/*" style="display: none;"
+                                onchange="uploadProfilePic()">
+                        </label>
+                    </div>
+                    <div id="profile-basic">
+                        <h3 id="disp-name">Loading...</h3>
+                        <p id="disp-email" class="text-muted"></p>
+                    </div>
+                </div>
+
+                <div class="profile-details-grid" id="profile-details">
+                    <!-- Details will be loaded here -->
+                </div>
+
+                <hr style="border-color: var(--glass-border); margin: 2.5rem 0;">
+
+                <h3>Resume</h3>
+                <div id="resume-section" class="mt-3">
+                    <div id="resume-status">
+                        <p class="text-muted">No resume uploaded yet.</p>
+                    </div>
+                    <div class="mt-2" style="display: flex; gap: 1rem; align-items: center;">
+                        <input type="file" id="resume-file" accept=".pdf">
+                        <button class="btn btn-secondary" onclick="uploadResume()">Upload/Replace</button>
+                    </div>
+                    <div id="resume-actions" class="resume-actions" style="display: none;">
+                        <button class="btn btn-ghost" onclick="viewResume()"><i class="fa-solid fa-eye"></i>
+                            View</button>
+                        <button class="btn btn-ghost border-danger" onclick="deleteResume()"><i
+                                class="fa-solid fa-trash"></i> Delete</button>
+                    </div>
+                </div>
+
+                <div class="mt-4" style="border-top: 1px solid var(--glass-border); padding-top: 2rem;">
+                    <button class="btn btn-danger" onclick="handleAccountDeletion()"><i
+                            class="fa-solid fa-user-xmark"></i> Delete Account</button>
+                    <p class="text-muted mt-2" style="font-size: 0.8rem;">Warning: This action is permanent and will
+                        delete all your data.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div class="modal-overlay" id="edit-modal">
+        <div class="modal-container glass-card" style="max-width: 600px;">
+            <span class="close-btn" onclick="closeEditModal()"><i class="fa-solid fa-times"></i></span>
+            <h2>Edit Profile</h2>
+            <form onsubmit="handleProfileUpdate(event)" class="mt-3">
+                <div class="profile-details-grid">
+                    <div class="input-group">
+                        <label>Full Name</label>
+                        <input type="text" id="edit-name" class="styled-select" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Phone Number</label>
+                        <input type="text" id="edit-phone" class="styled-select">
+                    </div>
+                    <div class="input-group">
+                        <label>Location</label>
+                        <input type="text" id="edit-location" placeholder="City, State" class="styled-select">
+                    </div>
+                    <div class="input-group">
+                        <label>Experience Level</label>
+                        <select id="edit-exp" class="styled-select">
+                            <option value="Entry Level">Entry Level</option>
+                            <option value="Junior">Junior</option>
+                            <option value="Mid-Level">Mid-Level</option>
+                            <option value="Senior">Senior</option>
+                            <option value="Expert">Expert</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>LinkedIn URL</label>
+                        <input type="url" id="edit-linkedin" class="styled-select">
+                    </div>
+                    <div class="input-group">
+                        <label>GitHub URL</label>
+                        <input type="url" id="edit-github" class="styled-select">
+                    </div>
+                    <div class="input-group">
+                        <label>Age</label>
+                        <input type="number" id="edit-age" class="styled-select" min="1" max="120">
+                    </div>
+                    <div class="input-group">
+                        <label>Gender</label>
+                        <select id="edit-gender" class="styled-select">
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Skills (comma separated)</label>
+                    <textarea id="edit-skills" class="styled-select" rows="3" style="resize: vertical;"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const role = localStorage.getItem('role');
+            if (role !== 'ROLE_JOB_SEEKER') {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            document.getElementById('user-name').innerText = localStorage.getItem('name');
+            loadJobs();
+            loadProfile();
+        });
+
+        function switchTab(tabId) {
+            // Hide all tab content
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Remove active class from all side nav items
+            document.querySelectorAll('.sidebar .nav-item').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Show selected tab content
+            const targetTab = document.getElementById(tabId);
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+
+            // Find the clicked nav item and mark it active
+            const navItems = document.querySelectorAll('.sidebar .nav-item');
+            navItems.forEach(item => {
+                if (item.getAttribute('onclick').includes(tabId)) {
+                    item.classList.add('active');
+                }
+            });
+
+            if (tabId === 'jobs-tab') loadJobs();
+            if (tabId === 'apps-tab') loadApplications();
+        }
+
+        function createJobCard(job, canApply = true) {
+            return `
+                <div class="glass-card job-item">
+                    <div class="job-details">
+                        <h3>${job.title}</h3>
+                        <div class="job-meta">
+                            <span><i class="fa-solid fa-building"></i> ${job.recruiter ? job.recruiter.name : 'N/A'} (${job.recruiter ? job.recruiter.companyName : 'N/A'})</span>
+                            <span><i class="fa-solid fa-location-dot"></i> ${job.location}</span>
+                            <span><i class="fa-solid fa-money-bill"></i> $${job.salary || 'Competitive'}</span>
+                        </div>
+                        <p class="mt-3" style="font-size: 0.9rem; color: #cbd5e1;">${job.description}</p>
+                    </div>
+                    ${canApply ? `<button class="btn btn-primary" onclick="applyForJob(${job.id})">Apply</button>` : ''}
+                </div>
+            `;
+        }
+
+        async function loadJobs() {
+            const keyword = document.getElementById('search-input').value;
+            const jobsList = document.getElementById('jobs-list');
+            jobsList.innerHTML = '<p>Loading jobs...</p>';
+            try {
+                const allJobs = await api.seeker.searchJobs(keyword);
+                const jobs = allJobs.filter(j => j.status === 'APPROVED');
+                if (jobs.length === 0) {
+                    jobsList.innerHTML = '<p>No jobs found.</p>';
+                    return;
+                }
+                jobsList.innerHTML = jobs.map(j => createJobCard(j)).join('');
+            } catch (e) {
+                jobsList.innerHTML = `<p class="text-danger">Error loading jobs: ${e.message}</p>`;
+            }
+        }
+
+        async function applyForJob(id) {
+            try {
+                await api.seeker.applyJob(id);
+                showToast('Applied successfully!', 'success');
+            } catch (e) {
+                showToast(e.message, 'error');
+            }
+        }
+
+        async function loadApplications() {
+            const list = document.getElementById('apps-list');
+            list.innerHTML = '<p>Loading...</p>';
+            try {
+                const apps = await api.seeker.getApplications();
+                if (apps.length === 0) {
+                    list.innerHTML = '<p>You haven\'t applied to any jobs yet.</p>';
+                    return;
+                }
+                list.innerHTML = apps.map(app => `
+                    <div class="glass-card job-item">
+                        <div>
+                            <h4>${app.job.title}</h4>
+                            <p class="text-muted"><i class="fa-solid fa-building"></i> ${app.job.location}</p>
+                        </div>
+                        <div>
+                            <span class="tag" style="padding: 5px 10px; border-radius: 4px; background: rgba(79, 70, 229, 0.2); border: 1px solid var(--primary);">${app.status}</span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                list.innerHTML = `<p>Error: ${e.message}</p>`;
+            }
+        }
+
+        async function loadProfile() {
+            try {
+                const profile = await api.seeker.getProfile();
+
+                // Basic Info
+                document.getElementById('disp-name').innerText = profile.name;
+                document.getElementById('disp-email').innerText = profile.email;
+
+                if (profile.profilePicturePath) {
+                    api.seeker.getProfilePictureURL().then(url => {
+                        document.getElementById('profile-img').src = url;
+                    });
+                }
+
+                // Detailed Info
+                const detailsGrid = document.getElementById('profile-details');
+                detailsGrid.innerHTML = `
+                    <div class="profile-field">
+                        <label>Phone Number</label>
+                        <p>${profile.phoneNumber || 'Not provided'}</p>
+                    </div>
+                    <div class="profile-field">
+                        <label>Location</label>
+                        <p>${profile.location || 'Not provided'}</p>
+                    </div>
+                    <div class="profile-field">
+                        <label>Experience Level</label>
+                        <p>${profile.experienceLevel || 'Not provided'}</p>
+                    </div>
+                    <div class="profile-field">
+                        <label>Skills</label>
+                        <p>${profile.skills || 'Not provided'}</p>
+                    </div>
+                    <div class="profile-field">
+                        <label>Age</label>
+                        <p>${profile.age || 'Not provided'}</p>
+                    </div>
+                    <div class="profile-field">
+                        <label>Gender</label>
+                        <p>${profile.gender || 'Not provided'}</p>
+                    </div>
+                    <div class="profile-field">
+                        <label>LinkedIn</label>
+                        <p>${profile.linkedinUrl ? `<a href="${profile.linkedinUrl}" target="_blank">View Profile</a>` : 'Not provided'}</p>
+                    </div>
+                    <div class="profile-field">
+                        <label>GitHub</label>
+                        <p>${profile.githubUrl ? `<a href="${profile.githubUrl}" target="_blank">View Profile</a>` : 'Not provided'}</p>
+                    </div>
+                `;
+
+                // Load Stats
+                loadStats();
+
+                // Resume Check
+                checkResume();
+
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const stats = await api.seeker.getStats();
+                document.getElementById('stat-applied').innerText = stats.applied || 0;
+                document.getElementById('stat-shortlisted').innerText = stats.shortlisted || 0;
+                document.getElementById('stat-rejected').innerText = stats.rejected || 0;
+            } catch (e) { console.error(e); }
+        }
+
+        async function checkResume() {
+            try {
+                const profile = await api.seeker.getProfile(); // Re-fetch to see resume status
+                const resumeStatus = document.getElementById('resume-status');
+                const resumeActions = document.getElementById('resume-actions');
+
+                // Find if user has a resume. In our current entity, Resume is 1:1. 
+                // We'll use a hack to check if resume exists via a specific endpoint or just check the profile response if we included it.
+                // For now, let's try to get it.
+                // Find if user has a resume.
+                try {
+                    await api.seeker.getOwnResume();
+                    resumeStatus.innerHTML = '<p class="text-success"><i class="fa-solid fa-check-circle"></i> Resume is uploaded and active.</p>';
+                    resumeActions.style.display = 'flex';
+                } catch (e) {
+                    resumeStatus.innerHTML = '<p class="text-muted">No resume uploaded yet.</p>';
+                    resumeActions.style.display = 'none';
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function openEditModal() {
+            document.getElementById('edit-modal').classList.add('active');
+            api.seeker.getProfile().then(p => {
+                document.getElementById('edit-name').value = p.name || '';
+                document.getElementById('edit-phone').value = p.phoneNumber || '';
+                document.getElementById('edit-location').value = p.location || '';
+                document.getElementById('edit-exp').value = p.experienceLevel || 'Entry Level';
+                document.getElementById('edit-linkedin').value = p.linkedinUrl || '';
+                document.getElementById('edit-github').value = p.githubUrl || '';
+                document.getElementById('edit-skills').value = p.skills || '';
+                document.getElementById('edit-age').value = p.age || '';
+                document.getElementById('edit-gender').value = p.gender || '';
+            });
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.remove('active');
+        }
+
+        async function handleProfileUpdate(e) {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('edit-name').value,
+                phoneNumber: document.getElementById('edit-phone').value,
+                location: document.getElementById('edit-location').value,
+                experienceLevel: document.getElementById('edit-exp').value,
+                linkedinUrl: document.getElementById('edit-linkedin').value,
+                githubUrl: document.getElementById('edit-github').value,
+                skills: document.getElementById('edit-skills').value,
+                age: document.getElementById('edit-age').value,
+                gender: document.getElementById('edit-gender').value
+            };
+
+            try {
+                await api.seeker.updateProfile(data);
+                showToast('Profile updated!', 'success');
+                closeEditModal();
+                loadProfile();
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        async function uploadProfilePic() {
+            const input = document.getElementById('pic-input');
+            if (!input.files.length) return;
+
+            const formData = new FormData();
+            formData.append('file', input.files[0]);
+
+            try {
+                showToast('Updating profile picture...', 'info');
+                await api.seeker.uploadProfilePicture(formData);
+                showToast('Picture updated!', 'success');
+                loadProfile();
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        async function uploadResume() {
+            const fileInput = document.getElementById('resume-file');
+            if (!fileInput.files.length) {
+                showToast('Please select a PDF file.', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                showToast('Uploading...', 'info');
+                await api.seeker.uploadResume(formData);
+                showToast('Resume uploaded!', 'success');
+                fileInput.value = '';
+                checkResume();
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        async function deleteResume() {
+            if (!confirm('Are you sure you want to delete your resume?')) return;
+            try {
+                await api.seeker.deleteResume();
+                showToast('Resume deleted', 'success');
+                checkResume();
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        async function viewResume() {
+            try {
+                const url = await api.seeker.downloadResume();
+                window.open(url, '_blank');
+            } catch (e) { showToast('Could not open resume', 'error'); }
+        }
+        async function handleAccountDeletion() {
+            if (!confirm("Are you absolutely sure you want to delete your account? This action cannot be undone and all your data will be permanently removed.")) return;
+
+            try {
+                await api.seeker.deleteAccount();
+                showToast("Account deleted successfully. Goodbye!", "success");
+                setTimeout(() => logout(), 2000);
+            } catch (e) {
+                showToast(e.message, "error");
+            }
+        }
+    </script>
+</body>
+
+</html>
