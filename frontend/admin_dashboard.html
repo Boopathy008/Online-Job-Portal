@@ -82,7 +82,7 @@
                     <table id="users-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>S.No</th>
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Role</th>
@@ -128,7 +128,7 @@
                     <table id="jobs-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>S.No</th>
                                 <th>Title</th>
                                 <th>Company/Recruiter</th>
                                 <th>Action</th>
@@ -260,12 +260,12 @@
             try {
                 const users = await api.admin.getUsers();
                 const tbody = document.getElementById('users-list');
-                tbody.innerHTML = users.map(u => {
+                tbody.innerHTML = users.map((u, index) => {
                     const statusClass = u.verificationStatus === 'APPROVED' ? 'tag-success' : (u.verificationStatus === 'REJECTED' ? 'tag-danger' : 'tag-warning');
                     const isSelf = u.email === localStorage.getItem('email');
                     return `
                         <tr>
-                            <td>${u.id}</td>
+                            <td>${index + 1}</td>
                             <td>${u.name}</td>
                             <td>${u.email}</td>
                             <td><span class="tag" style="background:${u.role === 'ROLE_ADMIN' ? 'var(--danger)' : 'var(--primary)'}; font-size:0.7rem; padding:3px 6px;">${u.role}</span></td>
@@ -308,9 +308,9 @@
             try {
                 const jobs = await api.admin.getJobs();
                 const tbody = document.getElementById('all-jobs-list');
-                tbody.innerHTML = jobs.map(j => `
+                tbody.innerHTML = jobs.map((j, index) => `
                     <tr>
-                        <td>${j.id}</td>
+                        <td>${index + 1}</td>
                         <td>${j.title}</td>
                         <td>${j.recruiter ? j.recruiter.name : 'Unknown'} ${j.recruiter && j.recruiter.companyName ? `(${j.recruiter.companyName})` : ''}</td>
                         <td><button class="btn btn-danger" style="padding: 5px 10px; font-size:0.8rem;" onclick="adminDeleteJob(${j.id})"><i class="fa-solid fa-trash"></i> Delete</button></td>
