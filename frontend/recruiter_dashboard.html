@@ -273,7 +273,7 @@
                             <i class="fa-solid fa-clock-rotate-left" style="color:var(--warning); font-size:1.5rem;"></i>
                             <div>
                                 <h4 style="margin:0; color:var(--warning);">Verification Pending</h4>
-                                <p style="margin:5px 0 0; font-size:0.9rem;">${profile.statusMessage || 'Your recruiter account is currently being reviewed by our team. You can post jobs, but they will remain PENDING and visible only to you until your account is fully verified.'}</p>
+                                <p style="margin:5px 0 0; font-size:0.9rem;">${profile.statusMessage || 'Your recruiter account is currently under review by the admin. You will be able to post jobs only after your account has been approved. Please wait until the verification process is completed.'}</p>
                             </div>
                         </div>
                     `;
@@ -295,6 +295,10 @@
                         </div>
                     `;
                     main.prepend(banner);
+
+                    // Hide Post New Job option if not approved
+                    const postJobNavItem = document.querySelector('.nav-item[onclick*="post-job"]');
+                    if (postJobNavItem) postJobNavItem.style.display = 'none';
                 }
             } catch (e) {
                 console.error('Failed to check verification status', e);
