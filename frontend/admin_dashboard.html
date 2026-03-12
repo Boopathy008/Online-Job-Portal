@@ -227,7 +227,7 @@
                     <tr>
                         <td>
                             <div style="font-weight:700;">${j.title}</div>
-                            <div style="font-size:0.8rem; color:var(--text-muted);">${j.location} | $${j.salary}</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">${j.location} | ${j.salary || 'Competitive'} LPA</div>
                         </td>
                         <td>
                             <div style="font-weight:600;">${j.recruiter ? j.recruiter.companyName : 'Unknown'}</div>

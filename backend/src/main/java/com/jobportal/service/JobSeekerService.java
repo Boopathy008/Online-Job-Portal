@@ -141,6 +141,8 @@ public class JobSeekerService {
         user.setGithubUrl(profileData.getGithubUrl());
         user.setSkills(profileData.getSkills());
         user.setExperienceLevel(profileData.getExperienceLevel());
+        user.setAge(profileData.getAge());
+        user.setGender(profileData.getGender());
         return userRepository.save(user);
     }
 
