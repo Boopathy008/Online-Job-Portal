@@ -4,6 +4,7 @@ import com.jobportal.entity.*;
 import com.jobportal.repository.ApplicationRepository;
 import com.jobportal.repository.JobRepository;
 import com.jobportal.repository.ResumeRepository;
+import com.jobportal.repository.CertificateRepository;
 import com.jobportal.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,6 +34,9 @@ public class JobSeekerService {
 
     @Autowired
     private ResumeRepository resumeRepository;
+    
+    @Autowired
+    private CertificateRepository certificateRepository;
 
     @Value("${upload.path}")
     private String uploadPath;
@@ -143,6 +147,7 @@ public class JobSeekerService {
         user.setExperienceLevel(profileData.getExperienceLevel());
         user.setAge(profileData.getAge());
         user.setGender(profileData.getGender());
+        user.setCertificates(profileData.getCertificates());
         return userRepository.save(user);
     }
 
@@ -199,8 +204,69 @@ public class JobSeekerService {
 
         // 2. Delete resume
         resumeRepository.deleteByJobSeeker(user);
+        
+        // 3. Delete certificates
+        List<Certificate> certs = certificateRepository.findByJobSeekerId(user.getId());
+        for (Certificate cert : certs) {
+            try {
+                Files.deleteIfExists(Paths.get(cert.getFilePath()));
+            } catch (Exception e) {}
+        }
+        certificateRepository.deleteByJobSeekerId(user.getId());
 
-        // 3. Finally delete the user
+        // 4. Finally delete the user
         userRepository.delete(user);
+    }
+    
+    public Certificate uploadCertificate(String email, MultipartFile file) throws IOException {
+        User user = getProfile(email);
+
+        if (file.isEmpty()) {
+            throw new RuntimeException("Please select a file to upload");
+        }
+        
+        if (!file.getContentType().equals("application/pdf")) {
+            throw new RuntimeException("Only PDF files are allowed for certificates.");
+        }
+
+        Path uploadDir = Paths.get(uploadPath, "certificates");
+        if (!Files.exists(uploadDir)) {
+            Files.createDirectories(uploadDir);
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        String fileName = "cert_" + user.getId() + "_" + System.currentTimeMillis() + "_" + originalFilename;
+        Path filePath = uploadDir.resolve(fileName);
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        Certificate certificate = new Certificate(user, originalFilename, filePath.toString());
+        return certificateRepository.save(certificate);
+    }
+
+    public List<Certificate> getCertificates(String email) {
+        User user = getProfile(email);
+        return certificateRepository.findByJobSeekerId(user.getId());
+    }
+    
+    public Certificate getCertificateById(Long id) {
+        return certificateRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Certificate not found"));
+    }
+
+    public void deleteCertificate(String email, Long certId) {
+        User user = getProfile(email);
+        Certificate cert = getCertificateById(certId);
+        
+        if (!cert.getJobSeeker().getId().equals(user.getId())) {
+             throw new RuntimeException("Unauthorized to delete this certificate");
+        }
+        
+        try {
+            Files.deleteIfExists(Paths.get(cert.getFilePath()));
+        } catch (Exception e) {
+            // Ignore file deletion error, still remove from DB
+        }
+        
+        certificateRepository.delete(cert);
     }
 }

@@ -50,6 +50,10 @@ public class User {
     private String companyRegistrationId;
     private Integer age;
     private String gender;
+    
+    @Column(columnDefinition = "TEXT")
+    private String certificates;
+    
     private String statusMessage;
 
     public User() {
@@ -221,6 +225,14 @@ public class User {
 
     public void setGender(String gender) {
         this.gender = gender;
+    }
+
+    public String getCertificates() {
+        return certificates;
+    }
+
+    public void setCertificates(String certificates) {
+        this.certificates = certificates;
     }
 
     public String getStatusMessage() {

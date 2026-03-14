@@ -68,6 +68,10 @@ const api = {
         getOwnResume: () => api.request('/seeker/resume'),
         downloadResume: () => api.download('/seeker/resume/download'),
         getProfilePictureURL: () => api.download('/seeker/profile/picture'),
+        uploadCertificate: (formData) => api.request('/seeker/certificates/upload', { method: 'POST', body: formData, multipart: true }),
+        getCertificates: () => api.request('/seeker/certificates'),
+        deleteCertificate: (id) => api.request(`/seeker/certificates/${id}`, { method: 'DELETE' }),
+        downloadCertificate: (id) => api.download(`/seeker/certificates/download/${id}`),
         deleteAccount: () => api.request('/seeker/account', { method: 'DELETE' })
     },
 
@@ -82,6 +86,8 @@ const api = {
         getResume: (seekerId) => api.request(`/recruiter/resume/${seekerId}`),
         downloadResume: (seekerId) => api.download(`/recruiter/resume/download/${seekerId}`),
         getSeekerProfilePictureURL: (seekerId) => api.download(`/recruiter/seeker-profile-pic/${seekerId}`),
+        getApplicantCertificates: (seekerId) => api.request(`/recruiter/certificates/${seekerId}`),
+        downloadApplicantCertificate: (certId) => api.download(`/recruiter/certificates/download/${certId}`),
         deleteAccount: () => api.request('/recruiter/account', { method: 'DELETE' })
     },
 

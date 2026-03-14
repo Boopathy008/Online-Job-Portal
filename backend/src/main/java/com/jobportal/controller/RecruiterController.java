@@ -3,6 +3,7 @@ package com.jobportal.controller;
 import com.jobportal.entity.ApplicationStatus;
 import com.jobportal.entity.Job;
 import com.jobportal.entity.Resume;
+import com.jobportal.entity.Certificate;
 import com.jobportal.entity.User;
 import com.jobportal.service.RecruiterService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,6 +119,28 @@ public class RecruiterController {
         try {
             Resume resume = recruiterService.getResumeBySeekerId(seekerId);
             Path path = Paths.get(resume.getFilePath());
+            Resource resource = new UrlResource(path.toUri());
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+                    .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    @GetMapping("/certificates/{seekerId}")
+    public ResponseEntity<List<Certificate>> getApplicantCertificates(@PathVariable Long seekerId, Authentication authentication) {
+        // Further authorization can be added in service to ensure recruiter has a job application from this seeker
+        return ResponseEntity.ok(recruiterService.getCertificatesBySeekerId(seekerId));
+    }
+
+    @GetMapping("/certificates/download/{certId}")
+    public ResponseEntity<?> viewCertificate(@PathVariable Long certId, Authentication authentication) {
+        try {
+            Certificate cert = recruiterService.getCertificateById(certId);
+            Path path = Paths.get(cert.getFilePath());
             Resource resource = new UrlResource(path.toUri());
 
             return ResponseEntity.ok()

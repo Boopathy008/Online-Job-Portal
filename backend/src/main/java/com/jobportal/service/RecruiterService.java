@@ -8,7 +8,9 @@ import com.jobportal.repository.ApplicationRepository;
 import com.jobportal.repository.JobRepository;
 import com.jobportal.repository.ResumeRepository;
 import com.jobportal.repository.UserRepository;
+import com.jobportal.repository.CertificateRepository;
 import com.jobportal.entity.Resume;
+import com.jobportal.entity.Certificate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +30,9 @@ public class RecruiterService {
 
     @Autowired
     private ResumeRepository resumeRepository;
+    
+    @Autowired
+    private CertificateRepository certificateRepository;
 
     private User getRecruiter(String email) {
         return userRepository.findByEmail(email)
@@ -111,6 +116,17 @@ public class RecruiterService {
         User seeker = getSeekerById(seekerId);
         return resumeRepository.findByJobSeeker(seeker)
                 .orElseThrow(() -> new RuntimeException("Resume not found for this user"));
+    }
+    
+    public List<Certificate> getCertificatesBySeekerId(Long seekerId) {
+        // Basic check to ensure seeker exists
+        getSeekerById(seekerId);
+        return certificateRepository.findByJobSeekerId(seekerId);
+    }
+    
+    public Certificate getCertificateById(Long certId) {
+        return certificateRepository.findById(certId)
+                .orElseThrow(() -> new RuntimeException("Certificate not found"));
     }
 
     @org.springframework.transaction.annotation.Transactional

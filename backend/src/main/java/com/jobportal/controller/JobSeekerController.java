@@ -3,6 +3,7 @@ package com.jobportal.controller;
 import com.jobportal.entity.Application;
 import com.jobportal.entity.Job;
 import com.jobportal.entity.Resume;
+import com.jobportal.entity.Certificate;
 import com.jobportal.entity.User;
 import com.jobportal.service.JobSeekerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -165,6 +166,61 @@ public class JobSeekerController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @PostMapping("/certificates/upload")
+    public ResponseEntity<?> uploadCertificate(@RequestParam("file") MultipartFile file, Authentication authentication) {
+        try {
+            Certificate cert = jobSeekerService.uploadCertificate(authentication.getName(), file);
+            return ResponseEntity.ok(cert);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "Could not upload certificate: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @GetMapping("/certificates")
+    public ResponseEntity<List<Certificate>> getCertificates(Authentication authentication) {
+        return ResponseEntity.ok(jobSeekerService.getCertificates(authentication.getName()));
+    }
+
+    @GetMapping("/certificates/download/{id}")
+    public ResponseEntity<Resource> downloadCertificate(@PathVariable Long id, Authentication authentication) {
+        try {
+            // Service handles authorization implicitly by checking if it belongs to the user
+            Certificate cert = jobSeekerService.getCertificateById(id);
+            // Extra security check for the controller
+            if (!cert.getJobSeeker().getEmail().equals(authentication.getName())) {
+               return ResponseEntity.status(403).build();
+            }
+
+            Path path = Paths.get(cert.getFilePath());
+            Resource resource = new UrlResource(path.toUri());
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+                    .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/certificates/{id}")
+    public ResponseEntity<?> deleteCertificate(@PathVariable Long id, Authentication authentication) {
+        try {
+            jobSeekerService.deleteCertificate(authentication.getName(), id);
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Certificate deleted successfully");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+
 
     @DeleteMapping("/account")
     public ResponseEntity<?> deleteAccount(java.security.Principal principal) {
