@@ -77,7 +77,11 @@
         <main>
             <!-- Users Tab -->
             <div id="manage-users" class="tab-content active glass-card">
-                <h2>User Management</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2 style="margin: 0;">User Management</h2>
+                    <input type="text" id="user-search" placeholder="Search by name or email..." class="styled-select" style="max-width: 300px; padding: 8px 12px; margin: 0;" onkeyup="filterUsers()">
+                </div>
+
                 <div style="overflow-x: auto;">
                     <table id="users-table">
                         <thead>
@@ -256,32 +260,52 @@
             }
         }
 
+        let allUsersData = [];
+
         async function loadUsers() {
             try {
-                const users = await api.admin.getUsers();
-                const tbody = document.getElementById('users-list');
-                tbody.innerHTML = users.map((u, index) => {
-                    const statusClass = u.verificationStatus === 'APPROVED' ? 'tag-success' : (u.verificationStatus === 'REJECTED' ? 'tag-danger' : 'tag-warning');
-                    const isSelf = u.email === localStorage.getItem('email');
-                    return `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${u.name}</td>
-                            <td>${u.email}</td>
-                            <td><span class="tag" style="background:${u.role === 'ROLE_ADMIN' ? 'var(--danger)' : 'var(--primary)'}; font-size:0.7rem; padding:3px 6px;">${u.role}</span></td>
-                            <td>
-                                <span class="tag ${statusClass}" style="font-size:0.7rem; padding:3px 6px;">${u.verificationStatus || 'N/A'}</span>
-                            </td>
-                            <td>
-                                ${!isSelf ? `<button class="btn btn-danger" style="padding: 5px 10px; font-size:0.8rem;" onclick="adminDeleteUser(${u.id})"><i class="fa-solid fa-trash"></i></button>` : '<span class="text-muted" style="font-size:0.7rem;">(You)</span>'}
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
+                allUsersData = await api.admin.getUsers();
+                filterUsers();
             } catch (e) {
                 showToast('Failed to load users: ' + e.message, 'error');
             }
         }
+
+        function filterUsers() {
+            const query = document.getElementById('user-search').value.toLowerCase();
+            const filtered = allUsersData.filter(u => 
+                (u.name && u.name.toLowerCase().includes(query)) || 
+                (u.email && u.email.toLowerCase().includes(query))
+            );
+            renderUsers(filtered);
+        }
+
+        function renderUsers(users) {
+            const tbody = document.getElementById('users-list');
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem;">No users found matching your search.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = users.map((u, index) => {
+                const statusClass = u.verificationStatus === 'APPROVED' ? 'tag-success' : (u.verificationStatus === 'REJECTED' ? 'tag-danger' : 'tag-warning');
+                const isSelf = u.email === localStorage.getItem('email');
+                return `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${u.name}</td>
+                        <td>${u.email}</td>
+                        <td><span class="tag" style="background:${u.role === 'ROLE_ADMIN' ? 'var(--danger)' : 'var(--primary)'}; font-size:0.7rem; padding:3px 6px;">${u.role}</span></td>
+                        <td>
+                            <span class="tag ${statusClass}" style="font-size:0.7rem; padding:3px 6px;">${u.verificationStatus || 'N/A'}</span>
+                        </td>
+                        <td>
+                            ${!isSelf ? `<button class="btn btn-danger" style="padding: 5px 10px; font-size:0.8rem;" onclick="adminDeleteUser(${u.id})"><i class="fa-solid fa-trash"></i></button>` : '<span class="text-muted" style="font-size:0.7rem;">(You)</span>'}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
 
         async function adminDeleteUser(id) {
             if (!confirm("Are you sure you want to PERMANENTLY delete this user? All their associated data (jobs, applications, resumes) will be removed.")) return;
