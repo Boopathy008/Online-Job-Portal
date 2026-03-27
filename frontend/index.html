@@ -19,8 +19,8 @@
                 <i class="fa-solid fa-briefcase"></i> JobHub
             </div>
             <div class="nav-links">
-                <button class="btn btn-ghost" onclick="showLogin()">Log In</button>
-                <button class="btn btn-ghost" style="color:var(--danger)" onclick="showLogin()"><i
+                <button class="btn btn-ghost" onclick="showLogin(false)">Log In</button>
+                <button class="btn btn-ghost" style="color:var(--danger)" onclick="showLogin(true)"><i
                         class="fa-solid fa-shield"></i> Admin Login</button>
                 <button class="btn btn-primary" onclick="showRegister()">Sign Up</button>
             </div>
@@ -236,7 +236,7 @@
                     <button type="submit" class="btn btn-primary btn-full">Create Account</button>
                 </form>
                 <div class="auth-switch">
-                    Already have an account? <a href="#" onclick="showLogin()">Log in</a>
+                    Already have an account? <a href="#" onclick="showLogin(false)">Log in</a>
                 </div>
             </div>
         </div>

@@ -1,6 +1,20 @@
 // UI Logic for index.html Auth Modals
 
-function showLogin() {
+let isCurrentLoginAdmin = false;
+
+function showLogin(isAdmin = false) {
+    isCurrentLoginAdmin = isAdmin;
+    const title = document.querySelector('#login-form h2');
+    const subtitle = document.querySelector('#login-form .subtitle');
+    
+    if (isAdmin) {
+        title.innerHTML = '<i class="fa-solid fa-shield" style="color:var(--danger)"></i> Admin Login';
+        subtitle.innerText = 'Log in to access the admin dashboard';
+    } else {
+        title.innerText = 'Welcome Back';
+        subtitle.innerText = 'Log in to manage your career';
+    }
+
     document.getElementById('auth-modal').classList.add('active');
     document.getElementById('login-form').classList.add('active');
     document.getElementById('register-form').classList.remove('active');
@@ -49,6 +63,14 @@ async function handleLogin(e) {
         const password = document.getElementById('login-password').value;
 
         const res = await api.auth.login({ email, password });
+
+        if (isCurrentLoginAdmin && res.role !== 'ROLE_ADMIN') {
+            throw new Error("Only administrators can log in here. Please use the regular Log In button.");
+        }
+        
+        if (!isCurrentLoginAdmin && res.role === 'ROLE_ADMIN') {
+            throw new Error("Admin credentials must be used with the Admin Login button.");
+        }
 
         localStorage.setItem('token', res.token);
         localStorage.setItem('role', res.role);

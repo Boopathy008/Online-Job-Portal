@@ -457,7 +457,7 @@
             document.getElementById('modal-seeker-name').innerText = seeker.name;
             document.getElementById('modal-seeker-email').innerText = seeker.email;
             document.getElementById('modal-seeker-location').innerText = seeker.location || 'N/A';
-            document.getElementById('modal-seeker-exp').innerText = seeker.experienceLevel || 'N/A';
+            document.getElementById('modal-seeker-exp').innerText = !seeker.experienceLevel ? 'N/A' : (isNaN(seeker.experienceLevel) ? seeker.experienceLevel : seeker.experienceLevel + ' Years');
 
             const linkedin = document.getElementById('modal-seeker-linkedin');
             linkedin.innerHTML = seeker.linkedinUrl ? `<a href="${seeker.linkedinUrl}" target="_blank">View LinkedIn</a>` : 'N/A';

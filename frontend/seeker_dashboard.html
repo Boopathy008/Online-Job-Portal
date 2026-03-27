@@ -189,7 +189,7 @@
 
                 <div class="profile-header">
                     <div class="profile-pic-container">
-                        <img id="profile-img" src="https://via.placeholder.com/120" alt="Profile" class="profile-pic">
+                        <img id="profile-img" src="data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22120%22%20height%3D%22120%22%20viewBox%3D%220%200%20120%20120%22%3E%3Crect%20fill%3D%22%23334155%22%20width%3D%22120%22%20height%3D%22120%22%2F%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M60%2060c11.05%200%2020-8.95%2020-20s-8.95-20-20-20-20%208.95-20%2020%208.95%2020%2020%2020zm0%2010c-13.33%200-40%206.67-40%2020v10h80v-10c0-13.33-26.67-20-40-20z%22%2F%3E%3C%2Fsvg%3E" alt="Profile" class="profile-pic">
                         <label for="pic-input" class="pic-upload-btn">
                             <i class="fa-solid fa-camera"></i>
                             <input type="file" id="pic-input" accept="image/*" style="display: none;"
@@ -266,14 +266,8 @@
                         <input type="text" id="edit-location" placeholder="Location" class="styled-select">
                     </div>
                     <div class="input-group">
-                        <label>Experience Level</label>
-                        <select id="edit-exp" class="styled-select">
-                            <option value="Entry Level">Entry Level</option>
-                            <option value="Junior">Junior</option>
-                            <option value="Mid-Level">Mid-Level</option>
-                            <option value="Senior">Senior</option>
-                            <option value="Expert">Expert</option>
-                        </select>
+                        <label>Experience (Years)</label>
+                        <input type="number" id="edit-exp" class="styled-select" step="0.5" min="0" placeholder="e.g. 2.5">
                     </div>
                     <div class="input-group">
                         <label>LinkedIn URL</label>
@@ -437,7 +431,11 @@
                 if (profile.profilePicturePath) {
                     api.seeker.getProfilePictureURL().then(url => {
                         document.getElementById('profile-img').src = url;
+                    }).catch(() => {
+                        document.getElementById('profile-img').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=3b82f6&color=fff&size=120&bold=true`;
                     });
+                } else {
+                    document.getElementById('profile-img').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=3b82f6&color=fff&size=120&bold=true`;
                 }
 
                 // Detailed Info
@@ -452,8 +450,8 @@
                         <p>${profile.location || 'Not provided'}</p>
                     </div>
                     <div class="profile-field">
-                        <label>Experience Level</label>
-                        <p>${profile.experienceLevel || 'Not provided'}</p>
+                        <label>Experience (Years)</label>
+                        <p>${!profile.experienceLevel ? 'Not provided' : (isNaN(profile.experienceLevel) ? profile.experienceLevel : profile.experienceLevel + ' Years')}</p>
                     </div>
                     <div class="profile-field">
                         <label>Skills</label>
@@ -529,7 +527,7 @@
                 document.getElementById('edit-name').value = p.name || '';
                 document.getElementById('edit-phone').value = p.phoneNumber || '';
                 document.getElementById('edit-location').value = p.location || '';
-                document.getElementById('edit-exp').value = p.experienceLevel || 'Entry Level';
+                document.getElementById('edit-exp').value = p.experienceLevel || '';
                 document.getElementById('edit-linkedin').value = p.linkedinUrl || '';
                 document.getElementById('edit-github').value = p.githubUrl || '';
                 document.getElementById('edit-skills').value = p.skills || '';
