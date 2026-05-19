@@ -379,6 +379,10 @@ a:hover {
     padding: 2rem 0;
 }
 
+.dashboard-container>* {
+    min-width: 0;
+}
+
 .sidebar .nav-item {
     display: block;
     padding: 12px 20px;
