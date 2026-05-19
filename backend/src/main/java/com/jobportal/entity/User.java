@@ -50,11 +50,13 @@ public class User {
     private String companyRegistrationId;
     private Integer age;
     private String gender;
-    
+
     @Column(columnDefinition = "TEXT")
     private String certificates;
-    
+
     private String statusMessage;
+
+    private String authLetterPath;
 
     public User() {
     }
@@ -241,5 +243,13 @@ public class User {
 
     public void setStatusMessage(String statusMessage) {
         this.statusMessage = statusMessage;
+    }
+
+    public String getAuthLetterPath() {
+        return authLetterPath;
+    }
+
+    public void setAuthLetterPath(String authLetterPath) {
+        this.authLetterPath = authLetterPath;
     }
 }

@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:8080/api';
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+// Replace with the actual deployed Render backend URL when known. e.g., 'https://jobhub-backend-demo.onrender.com/api'
+const API_BASE_URL = isLocalhost ? 'http://localhost:8080/api' : 'https://your-backend.onrender.com/api';
 
 const api = {
     getHeaders: () => {
@@ -10,11 +12,14 @@ const api = {
 
     async request(endpoint, options = {}) {
         try {
+            const token = localStorage.getItem('token');
+            const headers = options.multipart ?
+                (token ? { 'Authorization': `Bearer ${token}` } : {}) :
+                { ...this.getHeaders(), ...options.headers };
+
             const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                 ...options,
-                headers: options.multipart ?
-                    { 'Authorization': `Bearer ${localStorage.getItem('token')}` } :
-                    { ...this.getHeaders(), ...options.headers }
+                headers
             });
 
             const isJson = response.headers.get('content-type')?.includes('application/json');
@@ -52,7 +57,14 @@ const api = {
 
     auth: {
         login: (credentials) => api.request('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
-        register: (userData) => api.request('/auth/register', { method: 'POST', body: JSON.stringify(userData) })
+        register: (userData) => {
+            const isFormData = userData instanceof FormData;
+            return api.request('/auth/register', {
+                method: 'POST',
+                body: isFormData ? userData : JSON.stringify(userData),
+                multipart: isFormData
+            });
+        }
     },
 
     seeker: {
@@ -99,6 +111,7 @@ const api = {
         changeRole: (userId, role) => api.request(`/admin/users/${userId}/role?role=${role}`, { method: 'PUT' }),
         getPendingRecruiters: () => api.request('/admin/recruiters/pending'),
         updateRecruiterStatus: (id, status, message = '') => api.request(`/admin/recruiters/${id}/status?status=${status}&message=${encodeURIComponent(message)}`, { method: 'PUT' }),
+        downloadAuthLetter: (id) => api.download(`/admin/recruiters/${id}/auth-letter`),
         getPendingJobs: () => api.request('/admin/jobs/pending'),
         updateJobStatus: (id, status) => api.request(`/admin/jobs/${id}/status?status=${status}`, { method: 'PUT' })
     }

@@ -79,7 +79,8 @@
             <div id="manage-users" class="tab-content active glass-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <h2 style="margin: 0;">User Management</h2>
-                    <input type="text" id="user-search" placeholder="Search by name or email..." class="styled-select" style="max-width: 300px; padding: 8px 12px; margin: 0;" onkeyup="filterUsers()">
+                    <input type="text" id="user-search" placeholder="Search by name or email..." class="styled-select"
+                        style="max-width: 300px; padding: 8px 12px; margin: 0;" onkeyup="filterUsers()">
                 </div>
 
                 <div style="overflow-x: auto;">
@@ -194,7 +195,8 @@
                             </div>
                         </td>
                         <td>
-                            <div style="display:flex; gap:10px;">
+                            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                <button class="btn btn-secondary" style="padding:5px 10px; font-size:0.8rem;" onclick="viewAuthLetter(${r.id})"><i class="fa-solid fa-file-pdf"></i> View Letter</button>
                                 <button class="btn btn-primary" style="padding:5px 10px; font-size:0.8rem;" onclick="verifyRecruiter(${r.id}, 'APPROVED')">Approve</button>
                                 <button class="btn btn-danger" style="padding:5px 10px; font-size:0.8rem;" onclick="verifyRecruiter(${r.id}, 'REJECTED')">Reject</button>
                             </div>
@@ -216,6 +218,16 @@
                 loadPendingRecruiters();
             } catch (e) {
                 showToast(e.message, 'error');
+            }
+        }
+
+        async function viewAuthLetter(id) {
+            try {
+                showToast('Loading authorization letter...', 'info');
+                const url = await api.admin.downloadAuthLetter(id);
+                window.open(url, '_blank');
+            } catch (e) {
+                showToast('Letter not found or error loading.', 'error');
             }
         }
 
@@ -273,8 +285,8 @@
 
         function filterUsers() {
             const query = document.getElementById('user-search').value.toLowerCase();
-            const filtered = allUsersData.filter(u => 
-                (u.name && u.name.toLowerCase().includes(query)) || 
+            const filtered = allUsersData.filter(u =>
+                (u.name && u.name.toLowerCase().includes(query)) ||
                 (u.email && u.email.toLowerCase().includes(query))
             );
             renderUsers(filtered);

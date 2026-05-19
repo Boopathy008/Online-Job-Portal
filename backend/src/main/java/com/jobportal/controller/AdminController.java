@@ -10,6 +10,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +81,34 @@ public class AdminController {
             Map<String, String> response = new HashMap<>();
             response.put("error", e.getMessage());
             return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @GetMapping("/recruiters/{id}/auth-letter")
+    public ResponseEntity<Resource> downloadAuthLetter(@PathVariable Long id) {
+        try {
+            String pathStr = adminService.getAuthLetterPath(id);
+            Path filePath = Paths.get(pathStr);
+            Resource resource = new UrlResource(filePath.toUri());
+
+            if (resource.exists() || resource.isReadable()) {
+                String contentType = "application/octet-stream";
+                if (pathStr.toLowerCase().endsWith(".pdf"))
+                    contentType = "application/pdf";
+                else if (pathStr.toLowerCase().endsWith(".png"))
+                    contentType = "image/png";
+                else if (pathStr.toLowerCase().endsWith(".jpg") || pathStr.toLowerCase().endsWith(".jpeg"))
+                    contentType = "image/jpeg";
+
+                return ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(contentType))
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+                        .body(resource);
+            } else {
+                throw new RuntimeException("Could not read file");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 

@@ -64,6 +64,15 @@ public class AdminService {
                 com.jobportal.entity.VerificationStatus.PENDING);
     }
 
+    public String getAuthLetterPath(Long recruiterId) {
+        User user = userRepository.findById(recruiterId).orElseThrow(() -> new RuntimeException("Recruiter not found"));
+        if (user.getRole() != Role.ROLE_RECRUITER)
+            throw new RuntimeException("Not a recruiter");
+        if (user.getAuthLetterPath() == null)
+            throw new RuntimeException("No auth letter found");
+        return user.getAuthLetterPath();
+    }
+
     public User updateRecruiterStatus(Long id, com.jobportal.entity.VerificationStatus status, String message) {
         User recruiter = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Recruiter not found"));

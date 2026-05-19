@@ -6,7 +6,7 @@ function showLogin(isAdmin = false) {
     isCurrentLoginAdmin = isAdmin;
     const title = document.querySelector('#login-form h2');
     const subtitle = document.querySelector('#login-form .subtitle');
-    
+
     if (isAdmin) {
         title.innerHTML = '<i class="fa-solid fa-shield" style="color:var(--danger)"></i> Admin Login';
         subtitle.innerText = 'Log in to access the admin dashboard';
@@ -67,7 +67,7 @@ async function handleLogin(e) {
         if (isCurrentLoginAdmin && res.role !== 'ROLE_ADMIN') {
             throw new Error("Only administrators can log in here. Please use the regular Log In button.");
         }
-        
+
         if (!isCurrentLoginAdmin && res.role === 'ROLE_ADMIN') {
             throw new Error("Admin credentials must be used with the Admin Login button.");
         }
@@ -97,23 +97,39 @@ async function handleRegister(e) {
         const name = document.getElementById('reg-name').value;
         const email = document.getElementById('reg-email').value;
 
-        if (!email.toLowerCase().endsWith('@gmail.com')) {
-            showToast('Only @gmail.com addresses are allowed!', 'error');
+        const password = document.getElementById('reg-password').value;
+        const role = document.getElementById('reg-role').value;
+
+        if (role !== 'ROLE_RECRUITER' && !email.toLowerCase().endsWith('@gmail.com')) {
+            showToast('Only @gmail.com addresses are allowed for job seekers!', 'error');
             btn.innerText = originalText;
             btn.disabled = false;
             return;
         }
 
-        const password = document.getElementById('reg-password').value;
-        const role = document.getElementById('reg-role').value;
-
-        const userData = { name, email, password, role };
-
+        let userData;
         if (role === 'ROLE_RECRUITER') {
-            userData.companyName = document.getElementById('reg-company-name').value;
-            userData.companyEmail = document.getElementById('reg-company-email').value;
-            userData.companyWebsite = document.getElementById('reg-company-website').value;
-            userData.companyRegistrationId = document.getElementById('reg-company-id').value;
+            userData = new FormData();
+            userData.append('name', name);
+            userData.append('email', email);
+            userData.append('password', password);
+            userData.append('role', role);
+            userData.append('companyName', document.getElementById('reg-company-name').value);
+            userData.append('companyEmail', document.getElementById('reg-company-email').value);
+            userData.append('companyWebsite', document.getElementById('reg-company-website').value);
+            userData.append('companyRegistrationId', document.getElementById('reg-company-id').value);
+
+            const authLetterInput = document.getElementById('reg-auth-letter');
+            if (authLetterInput.files.length > 0) {
+                userData.append('authLetter', authLetterInput.files[0]);
+            } else {
+                showToast('Authorization Letter is required!', 'error');
+                btn.innerText = originalText;
+                btn.disabled = false;
+                return;
+            }
+        } else {
+            userData = { name, email, password, role };
         }
 
         await api.auth.register(userData);
