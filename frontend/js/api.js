@@ -1,6 +1,6 @@
 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 // Replace with the actual deployed Render backend URL when known. e.g., 'https://jobhub-backend-demo.onrender.com/api'
-const API_BASE_URL = isLocalhost ? 'http://localhost:8080/api' : 'https://your-backend.onrender.com/api';
+const API_BASE_URL = isLocalhost ? 'http://localhost:8080/api' : 'https://online-job-portal-5qkf.onrender.com/api';
 
 const api = {
     getHeaders: () => {
