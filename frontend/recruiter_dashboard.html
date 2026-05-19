@@ -168,8 +168,10 @@
 
             <!-- Applicants View -->
             <div id="view-applicants" class="tab-content glass-card">
-                <div style="display: flex; justify-content: space-between; align-items:center;">
-                    <h2>Applicants for: <span id="app-job-title" style="color:var(--primary)"></span></h2>
+                <div
+                    style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+                    <h2 style="margin: 0; flex: 1; min-width: 200px;">Applicants for: <span id="app-job-title"
+                            style="color:var(--primary)"></span></h2>
                     <button class="btn btn-ghost" onclick="switchTab('manage-jobs')"><i
                             class="fa-solid fa-arrow-left"></i> Back</button>
                 </div>
@@ -421,26 +423,26 @@
                 }
 
                 list.innerHTML = apps.map(app => `
-                    <div class="glass-card" style="margin-bottom:1rem; border-left: 4px solid var(--primary);">
-                        <div style="display:flex; justify-content: space-between; align-items:center;">
-                            <div style="display:flex; align-items:center; gap:15px;">
-                                <div style="font-size:1.5rem; color:var(--primary)"><i class="fa-solid fa-user-circle"></i></div>
-                                <div>
-                                    <h4 style="margin:0;">${app.jobSeeker.name}</h4>
-                                    <p class="text-muted" style="font-size:0.8rem;">Status: ${app.status}</p>
+                    <div class="glass-card" style="margin-bottom:1rem; border-left: 4px solid var(--primary); padding: 15px;">
+                        <div style="display:flex; flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px;">
+                            <div style="display:flex; align-items:center; gap:15px; flex: 1; min-width: 180px;">
+                                <div style="font-size:1.8rem; color:var(--primary); flex-shrink: 0;"><i class="fa-solid fa-user-circle"></i></div>
+                                <div style="min-width: 0; flex: 1;">
+                                    <h4 style="margin:0; white-space: normal; overflow-wrap: break-word;">${app.jobSeeker.name}</h4>
+                                    <p class="text-muted" style="font-size:0.8rem; margin: 2px 0;">Status: <span style="font-weight: 600;">${app.status}</span></p>
                                 </div>
                             </div>
-                            <div style="display:flex; gap:8px;">
-                                <button onclick='showSeekerProfile(${JSON.stringify(app.jobSeeker).replace(/'/g, "&apos;")})' class="btn btn-ghost" style="font-size:0.8rem; padding: 5px 10px;">
+                            <div style="display:flex; flex-wrap: wrap; gap:8px;">
+                                <button onclick='showSeekerProfile(${JSON.stringify(app.jobSeeker).replace(/'/g, "&apos;")})' class="btn btn-ghost" style="font-size:0.75rem; padding: 6px 12px; flex: 1; min-width: 90px;">
                                     View Profile
                                 </button>
-                                <button onclick="handleViewResume(${app.jobSeeker.id})" class="btn btn-secondary" style="font-size:0.8rem; padding: 5px 10px;">
+                                <button onclick="handleViewResume(${app.jobSeeker.id})" class="btn btn-secondary" style="font-size:0.75rem; padding: 6px 12px; flex: 1; min-width: 90px;">
                                     Resume
                                 </button>
-                                <button onclick="updateStatus(${app.id}, 'SHORTLISTED')" class="btn btn-success" style="font-size:0.8rem; padding: 5px 10px;">
+                                <button onclick="updateStatus(${app.id}, 'SHORTLISTED')" class="btn btn-success" style="font-size:0.75rem; padding: 6px 12px; flex: 1; min-width: 90px;">
                                     Shortlist
                                 </button>
-                                <button onclick="updateStatus(${app.id}, 'REJECTED')" class="btn btn-danger" style="font-size:0.8rem; padding: 5px 10px;">
+                                <button onclick="updateStatus(${app.id}, 'REJECTED')" class="btn btn-danger" style="font-size:0.75rem; padding: 6px 12px; flex: 1; min-width: 90px;">
                                     Reject
                                 </button>
                             </div>
