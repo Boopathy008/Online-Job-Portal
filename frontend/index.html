@@ -397,32 +397,11 @@
             loadFeaturedJobs();
         });
 
-        async function loadFeaturedJobs() {
+        function loadFeaturedJobs() {
+            // Landing page is public - show curated mock jobs
+            // (The seeker API requires auth, calling it would cause a redirect loop)
             const grid = document.getElementById('featured-jobs-grid');
-            try {
-                const allJobs = await api.seeker.searchJobs('');
-                const jobs = allJobs.filter(j => j.status === 'APPROVED').slice(0, 6);
-                if (jobs.length === 0) {
-                    showMockJobs(grid);
-                    return;
-                }
-                grid.innerHTML = jobs.map(job => `
-                    <div class="glass-card job-item">
-                        <div class="job-details">
-                            <h3>${job.title}</h3>
-                            <div class="job-meta">
-                                <span><i class="fa-solid fa-building"></i> ${job.recruiter ? job.recruiter.companyName : 'N/A'}</span>
-                                <span><i class="fa-solid fa-location-dot"></i> ${job.location}</span>
-                                <span><i class="fa-solid fa-money-bill"></i> ${job.salary || 'Competitive'} LPA</span>
-                            </div>
-                            <p class="mt-3" style="font-size: 0.9rem; color: var(--text-muted);">${(job.description || '').substring(0, 120)}...</p>
-                        </div>
-                        <button class="btn btn-primary" onclick="showRegister('ROLE_JOB_SEEKER')">Apply Now</button>
-                    </div>
-                `).join('');
-            } catch (e) {
-                showMockJobs(grid);
-            }
+            showMockJobs(grid);
         }
 
         function showMockJobs(grid) {
