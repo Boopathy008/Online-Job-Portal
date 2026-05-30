@@ -134,12 +134,13 @@ a:hover {
 
 /* Navbar */
 .navbar {
-    padding: 1.5rem 0;
+    padding: 1.2rem 0;
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(15, 23, 42, 0.8);
-    backdrop-filter: blur(10px);
+    background: rgba(10, 10, 10, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--glass-border);
 }
 
@@ -147,6 +148,23 @@ a:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.nav-menu {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.nav-link {
+    color: var(--text-muted) !important;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: var(--primary) !important;
 }
 
 .logo {
@@ -801,6 +819,13 @@ section {
         gap: 15px;
     }
 
+    .nav-menu {
+        width: 100%;
+        justify-content: center;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+
     .nav-links {
         width: 100%;
         justify-content: center;
@@ -882,5 +907,104 @@ section {
 
     .glass-card {
         padding: 15px;
+    }
+}
+
+/* Logo Marquee Animation */
+.companies-carousel {
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    padding: 2rem 0;
+    width: 100%;
+}
+
+.companies-carousel::before,
+.companies-carousel::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 100px;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.companies-carousel::before {
+    left: 0;
+    background: linear-gradient(to right, #0A0A0A, transparent);
+}
+
+.companies-carousel::after {
+    right: 0;
+    background: linear-gradient(to left, #0A0A0A, transparent);
+}
+
+.marquee-track {
+    display: inline-flex;
+    gap: 4rem;
+    animation: marquee 25s linear infinite;
+    align-items: center;
+}
+
+@keyframes marquee {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+.marquee-item {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--text-light);
+    letter-spacing: -1px;
+    opacity: 0.65;
+    transition: opacity 0.3s, color 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.marquee-item:hover {
+    opacity: 1;
+    color: var(--primary);
+}
+
+/* About Section CSS */
+.about-section .glass-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+    border-radius: 20px;
+    padding: 40px;
+}
+
+@media (max-width: 992px) {
+    .about-section .glass-card {
+        grid-template-columns: 1fr !important;
+        gap: 2rem;
+        padding: 24px;
+    }
+}
+
+/* Contact Section CSS */
+.contact-section .glass-card {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 3rem;
+    align-items: start;
+    border-radius: 20px;
+    padding: 40px;
+}
+
+@media (max-width: 768px) {
+    .contact-section .glass-card {
+        grid-template-columns: 1fr !important;
+        gap: 2.5rem;
+        padding: 24px;
     }
 }
